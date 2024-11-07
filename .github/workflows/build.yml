@@ -1,0 +1,41 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - '*'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build
+    strategy:
+      matrix:
+        os: [ 
+          { 
+            for_artifact: 'linux',
+            for_runner: 'ubuntu-24.04',
+          }, 
+          { 
+            for_artifact: 'mac',
+            for_runner: 'macos-14', 
+          }
+        ]
+    runs-on: ${{ matrix.os.for_runner }}
+    steps:
+      - name: git checkout
+        uses: actions/checkout@v4
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+      - name: Build
+        run: |
+          nix build
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: where-am-i-${{ matrix.os.for_artifact }}
+          path: result/
